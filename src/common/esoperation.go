@@ -123,7 +123,7 @@ func CreateArticle(article ZfInfolist, id int) {
 		log.Println("创建索引错误")
 		panic(err)
 	}
-	log.Printf("数据创建成功，数据id为%s,文章标题为：%s", put.Id, article.Title)
+	log.Printf("数据创建成功，数据id为%s,文章标题为：%s,是否已审批:%s", put.Id, article.Title,article.Checkinfo)
 }
 
 //按id查询文章是否存在
@@ -140,7 +140,135 @@ func IsExists(id string) bool {
 	return res.Found
 }
 
-//分页查询文章
+//无关键字查询文章
+func SearchArticlePagingNoKeyword(cy2,checkinfo string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy, classid int) *elastic.SearchResult {
+	es := ES
+	query := elastic.NewBoolQuery()
+	isNoKeyword := true
+	//栏目id
+	if classid != 0 {
+		classQuery := elastic.NewTermQuery("classid", classid)
+		query = query.Must(classQuery)
+		isNoKeyword = false
+	}
+	//是否审批
+	if len(checkinfo)!=0 {
+		checkQuery := elastic.NewTermQuery("checkinfo", checkinfo)
+		siteQuery := elastic.NewTermQuery("siteid","1")
+		query = query.Must(checkQuery,siteQuery)
+		isNoKeyword = false
+	}
+	//年份
+	if year != 0 {
+		yearDefault := elastic.NewTermQuery("year", -1)
+		yearValue := elastic.NewTermQuery("year", year)
+		shouldYear := elastic.NewBoolQuery().Should(yearDefault, yearValue)
+		query = query.Must(shouldYear)
+		isNoKeyword = false
+	}
+	//级别
+	if jb != 0 {
+		jbDefault := elastic.NewTermQuery("jb", -1)
+		jbValue := elastic.NewTermQuery("jb", jb)
+		shouldJB := elastic.NewBoolQuery().Should(jbDefault, jbValue)
+		query = query.Must(shouldJB)
+		isNoKeyword = false
+	}
+
+	//省份
+	if qyProv != 0 {
+		qyProvDefault := elastic.NewTermQuery("qy_prov", -1)
+		qyProvValue := elastic.NewTermQuery("qy_prov", qyProv)
+		shouldProv := elastic.NewBoolQuery().Should(qyProvDefault, qyProvValue)
+		query = query.Must(shouldProv)
+		isNoKeyword = false
+	}
+
+	//城市
+	if qyCity != 0 {
+		qyCityDefault := elastic.NewTermQuery("qy_city", -1)
+		qyCityValue := elastic.NewTermQuery("qy_city", qyCity)
+		shouldCity := elastic.NewBoolQuery().Should(qyCityDefault, qyCityValue)
+		query = query.Must(shouldCity)
+		isNoKeyword = false
+	}
+	//县
+	if qyCounty != 0 {
+		qyCountyDefault := elastic.NewTermQuery("live_county", -1)
+		qyCountyValue := elastic.NewTermQuery("live_county", qyCounty)
+		shouldCounty := elastic.NewBoolQuery().Should(qyCountyDefault, qyCountyValue)
+		query = query.Must(shouldCounty)
+		isNoKeyword = false
+	}
+	//部委
+	if bw != 0 {
+		bwDefault := elastic.NewTermQuery("bw", -1)
+		bwValue := elastic.NewTermQuery("bw", bw)
+		shouldBW := elastic.NewBoolQuery().Should(bwDefault, bwValue)
+		query = query.Must(shouldBW)
+		isNoKeyword = false
+	}
+
+	//产业1
+	if cy != 0 {
+		cyDefault := elastic.NewTermQuery("cy", -1)
+		cyValue := elastic.NewTermQuery("cy", cy)
+		shouldCY := elastic.NewBoolQuery().Should(cyDefault, cyValue)
+		query = query.Must(shouldCY)
+		isNoKeyword = false
+	}
+
+	//产业2
+	if len(cy2) != 0 {
+		cy2Default := elastic.NewTermQuery("cy2", "")
+		cy2Value := elastic.NewTermQuery("cy2", cy2)
+		shouldCY2 := elastic.NewBoolQuery().Should(cy2Default, cy2Value)
+		query = query.Must(shouldCY2)
+		isNoKeyword = false
+	}
+	all := elastic.NewMatchAllQuery()
+	fsc := elastic.NewFetchSourceContext(true).Include("checkinfo","id", "title", "classid", "posttime", "author", "hits")
+	if isNoKeyword {
+		res, err := es.Search().
+			Index("govfunds").
+			Query(all).
+			FetchSourceContext(fsc).
+			Pretty(true).
+			//Sort("qy_prov",true).
+			//Sort("qy_city",true).
+			//Sort("qy_county",true).
+			//Sort("title",true).
+			From((page - 1) * size).
+			Size(size).
+			Do(context.Background())
+		if err != nil {
+			log.Println("es 查询错误", err)
+			panic(err)
+		}
+		return res
+	}
+	res, err := es.Search().
+		Index("govfunds").
+		Query(query).
+		FetchSourceContext(fsc).
+		Pretty(true).
+		//Sort("title",true).
+		//Sort("qy_prov",true).
+		//Sort("qy_city",true).
+		//Sort("qy_county",true).
+
+		//Sort("year", false).
+		From((page - 1) * size).
+		Size(size).
+		Do(context.Background())
+	if err != nil {
+		log.Println("es 查询错误", err)
+		panic(err)
+	}
+	return res
+}
+
+//按关键字分页查询文章
 func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy int) *elastic.SearchResult {
 	es := ES
 	query := elastic.NewBoolQuery()

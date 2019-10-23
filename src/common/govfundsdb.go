@@ -25,7 +25,7 @@ type ZfInfolist struct {
 	Hits              int    `json:"hits"`
 	Orderid           int    `json:"orderid"`
 	Posttime          int    `json:"posttime"`
-	Checkinfo         bool   `json:"checkinfo"`
+	Checkinfo         string `json:"checkinfo"`
 	Delstate          string `json:"delstate"`
 	Deltime           int    `json:"deltime"`
 	Live_prov         int    `json:"live_prov"`
@@ -96,4 +96,21 @@ type ZfInfolist struct {
 	Week_time         int    `json:"week_time"`
 	Month_time        int    `json:"month_time"`
 	Season_time       int    `json:"season_time"`
+}
+type ZFInfoClass struct {
+	Id          int    `json:"id"`
+	Siteid      int    `json:"siteid"`
+	Parentid    int    `json:"parentid"`
+	Parentstr   string `json:"parentstr"`
+	Infotype    int    `json:"infotype"`
+	Classname   string `json:"classname"`
+	Linkurl     string `json:"linkurl"`
+	Picurl      string `json:"picurl"`
+	Picwidth    string `json:"picwidth"`
+	Picheight   string `json:"picheight"`
+	Seotitle    string `json:"seotitle"`
+	Keywords    string `json:"keywords"`
+	Description string `json:"description"`
+	Orderid     int    `json:"orderid"`
+	Checkinfo   string `json:"checkinfo"`
 }

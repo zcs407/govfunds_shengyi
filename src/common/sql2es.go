@@ -53,3 +53,15 @@ func TouchMysql2es() {
 		}
 	}
 }
+func GetClassNameByClassId (classid int )string{
+	db:=DBSQL
+    infoClass:=ZFInfoClass{}
+	db.Raw(`SELECT classname FROM zf_infoclass WHERE id = ?`,classid).Find(&infoClass)
+	return infoClass.Classname
+}
+func GetClassList()[]ZFInfoClass {
+	db:=DBSQL
+	classList := []ZFInfoClass{}
+	db.Raw(`SELECT * FROM zf_infoclass`).Find(&classList)
+	return classList
+}

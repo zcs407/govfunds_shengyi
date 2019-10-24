@@ -15,6 +15,7 @@ func main() {
 	r1 := router.Group("/govfunds")
 	{
 		r1.GET("/firstSave",controller.Firstsave)
+		r1.GET("/getUserPrivacy",controller.GetUserPrivacy)
 		r1.POST("/search", controller.Search)
 		r1.POST("/searchcolumnListInfo",controller.SearchForColumnListInfo)
 		r1.PUT("/dataSync2es", controller.DataSync2es)

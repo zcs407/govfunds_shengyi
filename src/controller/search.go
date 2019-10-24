@@ -85,6 +85,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 	resp := make(map[string]interface{})
 	type resArticle struct {
 		Id        int    `json:"id"`
+		Classid int `json:"classid"`
 		Checkinfo string `json:"checkinfo"`
 		Classname string `json:"classname"`
 		Title     string `json:"title"`
@@ -139,6 +140,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 		classname := common.GetClassNameByClassId(t.Classid)
 		article := resArticle{
 			Id:        t.Id,
+			Classid:t.Classid,
 			Checkinfo: t.Checkinfo,
 			Classname: classname,
 			Title:     t.Title,

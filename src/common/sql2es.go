@@ -67,3 +67,9 @@ func GetClassList() []ZFInfoClass {
 	db.Raw(`SELECT * FROM zf_infoclass`).Find(&classList)
 	return classList
 }
+func GetUserPrivacyByGroupId(groupId int) []ZFAdminPrivacy {
+	db:=DBSQL
+	userPrivacys:=[]ZFAdminPrivacy{}
+	db.Raw(`SELECT * FROM zf_adminprivacy WHERE groupid = ? AND model = ? AND action <> ?`,groupId,"category","add").Find(&userPrivacys)
+	return userPrivacys
+}

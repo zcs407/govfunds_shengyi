@@ -234,10 +234,7 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 			Query(all).
 			FetchSourceContext(fsc).
 			Pretty(true).
-			//Sort("qy_prov",true).
-			//Sort("qy_city",true).
-			//Sort("qy_county",true).
-			//Sort("title",true).
+			Sort("posttime",false).
 			From((page - 1) * size).
 			Size(size).
 			Do(context.Background())
@@ -252,12 +249,7 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		Query(query).
 		FetchSourceContext(fsc).
 		Pretty(true).
-		//Sort("title",true).
-		//Sort("qy_prov",true).
-		//Sort("qy_city",true).
-		//Sort("qy_county",true).
-
-		//Sort("year", false).
+		Sort("posttime", false).
 		From((page - 1) * size).
 		Size(size).
 		Do(context.Background())

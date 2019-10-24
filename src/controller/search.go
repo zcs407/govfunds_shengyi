@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+func Firstsave(ctx *gin.Context)  {
+	common.FirstSaveMysqlData2es()
+	ctx.JSON(200,"同步完成")
+}
 func Search(ctx *gin.Context) {
 	resp := make(map[string]interface{})
 	type resArticle struct {

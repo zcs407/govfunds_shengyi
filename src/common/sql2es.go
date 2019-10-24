@@ -7,10 +7,11 @@ import (
 )
 
 //首次执行将数据库中的数据id保存至文件
-func FirstSaveId() {
+func FirstSaveMysqlData2es() {
 	db := DBSQL
 	zf_infolist := []ZfInfolist{}
-	db.Raw(`SELECT id FROM zf_infolist WHERE (classid = ? OR parentstr LIKE ?)  AND   delstate=? AND checkinfo=? ORDER BY  ? ASC`, 7, "%,7,%", "", true, "id").Find(&zf_infolist)
+	//db.Raw(`SELECT id FROM zf_infolist WHERE (classid = ? OR parentstr LIKE ?)  AND   delstate=? AND checkinfo=? ORDER BY  ? ASC`, 7, "%,7,%", "", true, "id").Find(&zf_infolist)
+	db.Raw(`SELECT id FROM zf_infolist`).Find(&zf_infolist)
 	for _, article := range zf_infolist {
 		CreateMysql2es(article.Id)
 	}
@@ -39,7 +40,8 @@ func TouchMysql2es() {
 	postTime := SearchNewPostTime()
 	db := DBSQL
 	zf_infolist := []ZfInfolist{}
-	db.Raw(`SELECT id FROM zf_infolist WHERE posttime > ? AND (classid = ? OR parentstr LIKE ?)  AND   delstate=? AND checkinfo=?`, postTime, 7, "%,7,%", "", true).Find(&zf_infolist)
+	//db.Raw(`SELECT id FROM zf_infolist WHERE posttime > ? AND (classid = ? OR parentstr LIKE ?)  AND   delstate=? AND checkinfo=?`, postTime, 7, "%,7,%", "", true).Find(&zf_infolist)
+	db.Raw(`SELECT id FROM zf_infolist WHERE posttime > ?  AND   delstate=?`, postTime, "").Find(&zf_infolist)
 	if len(zf_infolist) == 0 {
 		log.Println("当前数据最新无需更新！")
 		return
@@ -53,14 +55,14 @@ func TouchMysql2es() {
 		}
 	}
 }
-func GetClassNameByClassId (classid int )string{
-	db:=DBSQL
-    infoClass:=ZFInfoClass{}
-	db.Raw(`SELECT classname FROM zf_infoclass WHERE id = ?`,classid).Find(&infoClass)
+func GetClassNameByClassId(classid int) string {
+	db := DBSQL
+	infoClass := ZFInfoClass{}
+	db.Raw(`SELECT classname FROM zf_infoclass WHERE id = ?`, classid).Find(&infoClass)
 	return infoClass.Classname
 }
-func GetClassList()[]ZFInfoClass {
-	db:=DBSQL
+func GetClassList() []ZFInfoClass {
+	db := DBSQL
 	classList := []ZFInfoClass{}
 	db.Raw(`SELECT * FROM zf_infoclass`).Find(&classList)
 	return classList

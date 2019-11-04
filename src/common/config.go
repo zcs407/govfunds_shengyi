@@ -13,10 +13,10 @@ func InitDB() {
 	gorm.NowFunc = func() time.Time {
 		return time.Now().Round(time.Second)
 	}
-	//dsn := "ander" + ":" + "Ander110!!" + "@tcp(" + "127.0.0.1:3316" + ")/" + "govfundsdb" + "?charset=utf8&parseTime=true&loc=Local"
-	dsnOnline := "root" + ":" + "zhengfu2018" + "@tcp(" + "127.0.0.1:3306" + ")/" + "bdm26610270_db" + "?charset=utf8&parseTime=true&loc=Local"
-	db, err := gorm.Open("mysql", dsnOnline)
-	//db, err := gorm.Open("mysql", dsn)
+	dsn := "ander" + ":" + "Ander110!!" + "@tcp(" + "127.0.0.1:3316" + ")/" + "govfundsdb" + "?charset=utf8&parseTime=true&loc=Local"
+	//dsnOnline := "root" + ":" + "zhengfu2018" + "@tcp(" + "127.0.0.1:3306" + ")/" + "bdm26610270_db" + "?charset=utf8&parseTime=true&loc=Local"
+	//db, err := gorm.Open("mysql", dsnOnline)
+	db, err := gorm.Open("mysql", dsn)
 	if err != nil {
 		panic(err)
 	}

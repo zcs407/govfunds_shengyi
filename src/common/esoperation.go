@@ -140,23 +140,20 @@ func IsExists(id string) bool {
 	return res.Found
 }
 
-//无关键字查询文章
-func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy, classid int) *elastic.SearchResult {
+//查询文章及栏目信息
+func SearchArticlePagingNoKeyword(keyword,cy2, checkinfo string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy, classid int) *elastic.SearchResult {
 	es := ES
 	query := elastic.NewBoolQuery()
-	isNoKeyword := true
 	//栏目id
 	if classid != 0 {
 		classQuery := elastic.NewTermQuery("classid", classid)
 		query = query.Must(classQuery)
-		isNoKeyword = false
 	}
 	//是否审批
 	if len(checkinfo) != 0 {
 		checkQuery := elastic.NewTermQuery("checkinfo", checkinfo)
 		siteQuery := elastic.NewTermQuery("siteid", "1")
 		query = query.Must(checkQuery, siteQuery)
-		isNoKeyword = false
 	}
 	//年份
 	if year != 0 {
@@ -164,7 +161,6 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		yearValue := elastic.NewTermQuery("year", year)
 		shouldYear := elastic.NewBoolQuery().Should(yearDefault, yearValue)
 		query = query.Must(shouldYear)
-		isNoKeyword = false
 	}
 	//级别
 	if jb != 0 {
@@ -172,7 +168,6 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		jbValue := elastic.NewTermQuery("jb", jb)
 		shouldJB := elastic.NewBoolQuery().Should(jbDefault, jbValue)
 		query = query.Must(shouldJB)
-		isNoKeyword = false
 	}
 
 	//省份
@@ -181,7 +176,6 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		qyProvValue := elastic.NewTermQuery("qy_prov", qyProv)
 		shouldProv := elastic.NewBoolQuery().Should(qyProvDefault, qyProvValue)
 		query = query.Must(shouldProv)
-		isNoKeyword = false
 	}
 
 	//城市
@@ -190,7 +184,6 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		qyCityValue := elastic.NewTermQuery("qy_city", qyCity)
 		shouldCity := elastic.NewBoolQuery().Should(qyCityDefault, qyCityValue)
 		query = query.Must(shouldCity)
-		isNoKeyword = false
 	}
 	//县
 	if qyCounty != 0 {
@@ -198,7 +191,6 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		qyCountyValue := elastic.NewTermQuery("live_county", qyCounty)
 		shouldCounty := elastic.NewBoolQuery().Should(qyCountyDefault, qyCountyValue)
 		query = query.Must(shouldCounty)
-		isNoKeyword = false
 	}
 	//部委
 	if bw != 0 {
@@ -206,7 +198,6 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		bwValue := elastic.NewTermQuery("bw", bw)
 		shouldBW := elastic.NewBoolQuery().Should(bwDefault, bwValue)
 		query = query.Must(shouldBW)
-		isNoKeyword = false
 	}
 
 	//产业1
@@ -215,7 +206,7 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		cyValue := elastic.NewTermQuery("cy", cy)
 		shouldCY := elastic.NewBoolQuery().Should(cyDefault, cyValue)
 		query = query.Must(shouldCY)
-		isNoKeyword = false
+		//isNoKeyword = false
 	}
 
 	//产业2
@@ -224,26 +215,20 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 		cy2Value := elastic.NewTermQuery("cy2", cy2)
 		shouldCY2 := elastic.NewBoolQuery().Should(cy2Default, cy2Value)
 		query = query.Must(shouldCY2)
-		isNoKeyword = false
 	}
-	all := elastic.NewMatchAllQuery()
+	//关键词
+	if len(keyword) != 0 {
+		mutile:=elastic.NewMatchPhraseQuery("title",keyword)
+		query = query.Must(mutile)
+
+	}
+	//非删除状态的文章
+	delState:=elastic.NewTermQuery("delstate","true")
+	query = query.MustNot(delState)
+
 	fsc := elastic.NewFetchSourceContext(true).Include("checkinfo", "id", "title", "classid", "posttime", "author", "hits")
-	if isNoKeyword {
-		res, err := es.Search().
-			Index("govfunds").
-			Query(all).
-			FetchSourceContext(fsc).
-			Pretty(true).
-			Sort("posttime",false).
-			From((page - 1) * size).
-			Size(size).
-			Do(context.Background())
-		if err != nil {
-			log.Println("es 查询错误", err)
-			panic(err)
-		}
-		return res
-	}
+
+
 	res, err := es.Search().
 		Index("govfunds").
 		Query(query).
@@ -264,14 +249,12 @@ func SearchArticlePagingNoKeyword(cy2, checkinfo string, page, size, year, jb, q
 func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy int) *elastic.SearchResult {
 	es := ES
 	query := elastic.NewBoolQuery()
-	//isNoKeyword := true
 	//年份
 	if year != 0 {
 		yearDefault := elastic.NewTermQuery("year", -1)
 		yearValue := elastic.NewTermQuery("year", year)
 		shouldYear := elastic.NewBoolQuery().Should(yearDefault, yearValue)
 		query = query.Must(shouldYear)
-		//isNoKeyword = false
 	}
 	//级别
 	if jb != 0 {
@@ -279,7 +262,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		jbValue := elastic.NewTermQuery("jb", jb)
 		shouldJB := elastic.NewBoolQuery().Should(jbDefault, jbValue)
 		query = query.Must(shouldJB)
-		//isNoKeyword = false
 	}
 
 	//省份
@@ -288,7 +270,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		qyProvValue := elastic.NewTermQuery("qy_prov", qyProv)
 		shouldProv := elastic.NewBoolQuery().Should(qyProvDefault, qyProvValue)
 		query = query.Must(shouldProv)
-		//isNoKeyword = false
 	}
 
 	//城市
@@ -297,7 +278,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		qyCityValue := elastic.NewTermQuery("qy_city", qyCity)
 		shouldCity := elastic.NewBoolQuery().Should(qyCityDefault, qyCityValue)
 		query = query.Must(shouldCity)
-		//isNoKeyword = false
 	}
 	//县
 	if qyCounty != 0 {
@@ -305,7 +285,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		qyCountyValue := elastic.NewTermQuery("live_county", qyCounty)
 		shouldCounty := elastic.NewBoolQuery().Should(qyCountyDefault, qyCountyValue)
 		query = query.Must(shouldCounty)
-		//isNoKeyword = false
 	}
 	//部委
 	if bw != 0 {
@@ -313,7 +292,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		bwValue := elastic.NewTermQuery("bw", bw)
 		shouldBW := elastic.NewBoolQuery().Should(bwDefault, bwValue)
 		query = query.Must(shouldBW)
-		//isNoKeyword = false
 	}
 
 	//产业1
@@ -322,7 +300,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		cyValue := elastic.NewTermQuery("cy", cy)
 		shouldCY := elastic.NewBoolQuery().Should(cyDefault, cyValue)
 		query = query.Must(shouldCY)
-		//isNoKeyword = false
 	}
 
 	//产业2
@@ -331,21 +308,20 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		cy2Value := elastic.NewTermQuery("cy2", cy2)
 		shouldCY2 := elastic.NewBoolQuery().Should(cy2Default, cy2Value)
 		query = query.Must(shouldCY2)
-		//isNoKeyword = false
 	}
 	if len(keyword) != 0 {
-		multi := elastic.NewMultiMatchQuery(keyword, "title", "content").TieBreaker(0.3)
+		multiq:=elastic.NewMatchPhraseQuery("title",keyword)
+		keywordQuery:=elastic.NewMatchQuery("content",keyword)
+		multi:=elastic.NewBoolQuery().Should(multiq).Must(keywordQuery)
 		query = query.Must(multi)
-		//isNoKeyword = false
+		//query = query.Must(multiq)
 	}
-	//all := elastic.NewMatchAllQuery()
 	classidQuery := elastic.NewTermQuery("classid", 7)
 	parenstrQuery := elastic.NewMatchQuery("parentstr", ",7,")
 	classidOrParent := elastic.NewBoolQuery().Should(classidQuery, parenstrQuery)
 	checkInfo := elastic.NewTermQuery("checkinfo", "true")
-	query = query.Must(classidOrParent).Must(checkInfo)
+	query = query.Must(checkInfo).Must(classidOrParent)
 	fsc := elastic.NewFetchSourceContext(true).Include("title", "classid", "id", "jb", "end_time", "year")
-	//if isNoKeyword {
 	res, err := es.Search().
 		Index("govfunds").
 		Query(query).
@@ -360,21 +336,6 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		panic(err)
 	}
 	return res
-	//}
-	//res, err := es.Search().
-	//	Index("govfunds").
-	//	Query(query).
-	//	FetchSourceContext(fsc).
-	//	Pretty(true).
-	//	Sort("year", false).
-	//	From((page - 1) * size).
-	//	Size(size).
-	//	Do(context.Background())
-	//if err != nil {
-	//	log.Println("es 查询错误", err)
-	//	panic(err)
-	//}
-	//return res
 }
 
 //打印搜索结果内容

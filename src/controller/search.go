@@ -96,6 +96,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 	var json struct {
 		Year       string `json:"year"`
 		Jb         string `json:"jb"`
+		Value string	`json:"value"`
 		LiveProv   string `json:"live_prov"`
 		LiveCity   string `json:"live_city"`
 		LiveCounty string `json:"live_county"`
@@ -109,6 +110,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 	}
 	var resArticlesInfo []resArticle
 	_ = ctx.BindJSON(&json)
+	keyword:=json.Value
 	year, _ := strconv.Atoi(json.Year)
 	jb, _ := strconv.Atoi(json.Jb)
 	prov, _ := strconv.Atoi(json.LiveProv)
@@ -133,7 +135,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 		return
 	}
 	log.Println(json)
-	res := common.SearchArticlePagingNoKeyword(cy2,checkinfo, pageInt, sizeInt, year, jb, prov, city, county, bw, cy, classid)
+	res := common.SearchArticlePagingNoKeyword(keyword,cy2,checkinfo, pageInt, sizeInt, year, jb, prov, city, county, bw, cy, classid)
 	var typ common.ZfInfolist
 	for _, item := range res.Each(reflect.TypeOf(typ)) { //从搜索结果中取数据的方法
 		t := item.(common.ZfInfolist)

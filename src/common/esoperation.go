@@ -3,10 +3,11 @@ package common
 import (
 	"context"
 	"fmt"
-	"github.com/olivere/elastic"
 	"log"
 	"reflect"
 	"strconv"
+
+	"github.com/olivere/elastic"
 )
 
 func CreateArticle(article ZfInfolist, id int) {
@@ -141,7 +142,7 @@ func IsExists(id string) bool {
 }
 
 //查询文章及栏目信息
-func SearchArticlePagingNoKeyword(keyword,cy2, checkinfo string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy, classid int) *elastic.SearchResult {
+func SearchColumnInfo(keyword, cy2, checkinfo string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy, classid int, isContent bool) *elastic.SearchResult {
 	es := ES
 	query := elastic.NewBoolQuery()
 	//栏目id
@@ -218,16 +219,20 @@ func SearchArticlePagingNoKeyword(keyword,cy2, checkinfo string, page, size, yea
 	}
 	//关键词
 	if len(keyword) != 0 {
-		mutile:=elastic.NewMatchPhraseQuery("title",keyword)
-		query = query.Must(mutile)
-
+		if isContent {
+			titleQuery := elastic.NewMatchPhraseQuery("title", keyword)
+			contentQuery := elastic.NewMatchQuery("content", keyword)
+			query = query.Should(titleQuery).Must(contentQuery)
+		} else {
+			mutile := elastic.NewMatchPhraseQuery("title", keyword)
+			query = query.Must(mutile)
+		}
 	}
 	//非删除状态的文章
-	delState:=elastic.NewTermQuery("delstate","true")
+	delState := elastic.NewTermQuery("delstate", "true")
 	query = query.MustNot(delState)
 
 	fsc := elastic.NewFetchSourceContext(true).Include("checkinfo", "id", "title", "classid", "posttime", "author", "hits")
-
 
 	res, err := es.Search().
 		Index("govfunds").
@@ -246,7 +251,7 @@ func SearchArticlePagingNoKeyword(keyword,cy2, checkinfo string, page, size, yea
 }
 
 //按关键字分页查询文章
-func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy int) *elastic.SearchResult {
+func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCity, qyCounty, bw, cy int, isContent bool) *elastic.SearchResult {
 	es := ES
 	query := elastic.NewBoolQuery()
 	//年份
@@ -310,11 +315,14 @@ func SearchArticlePaging(keyword, cy2 string, page, size, year, jb, qyProv, qyCi
 		query = query.Must(shouldCY2)
 	}
 	if len(keyword) != 0 {
-		multiq:=elastic.NewMatchPhraseQuery("title",keyword)
-		keywordQuery:=elastic.NewMatchQuery("content",keyword)
-		multi:=elastic.NewBoolQuery().Should(multiq).Must(keywordQuery)
-		query = query.Must(multi)
-		//query = query.Must(multiq)
+		if isContent {
+			titleQuery := elastic.NewMatchPhraseQuery("title", keyword)
+			contentQuery := elastic.NewMatchQuery("content", keyword)
+			query = query.Should(titleQuery).Must(contentQuery)
+		} else {
+			mutile := elastic.NewMatchPhraseQuery("title", keyword)
+			query = query.Must(mutile)
+		}
 	}
 	classidQuery := elastic.NewTermQuery("classid", 7)
 	parenstrQuery := elastic.NewMatchQuery("parentstr", ",7,")

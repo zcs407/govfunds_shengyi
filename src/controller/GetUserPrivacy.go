@@ -9,9 +9,9 @@ import (
 
 func GetUserPrivacy(ctx *gin.Context) {
 	resp := make(map[string]interface{})
-	privacys:=[]*common.ZFAdminPrivacy{}
-	groupid:=ctx.Query("groupid")
-	if len(groupid) == 0||groupid=="0" {
+	privacys := []*common.ZFAdminPrivacy{}
+	groupid := ctx.Query("groupid")
+	if len(groupid) == 0 || groupid == "0" {
 		log.Println("groupid不合法")
 		resp["code"] = "5000"
 		resp["info"] = "groupid 为0,没有相关数据"
@@ -21,7 +21,7 @@ func GetUserPrivacy(ctx *gin.Context) {
 	}
 	groupId, _ := strconv.Atoi(groupid)
 	privacys1 := common.GetUserPrivacyByGroupId(groupId)
-	if len(privacys1)==0{
+	if len(privacys1) == 0 {
 		log.Println("没有查到数据")
 		resp["code"] = "4003"
 		resp["info"] = "没有查到数据"
@@ -29,8 +29,8 @@ func GetUserPrivacy(ctx *gin.Context) {
 		ctx.JSON(200, resp)
 		return
 	}
-	for _,priv:=range privacys1{
-		privacy:=common.ZFAdminPrivacy{
+	for _, priv := range privacys1 {
+		privacy := common.ZFAdminPrivacy{
 			Groupid: priv.Groupid,
 			Siteid:  priv.Siteid,
 			Model:   priv.Model,
@@ -38,7 +38,7 @@ func GetUserPrivacy(ctx *gin.Context) {
 			Action:  priv.Action,
 		}
 
-		privacys= append(privacys, &privacy)
+		privacys = append(privacys, &privacy)
 	}
 	resp["code"] = "2000"
 	resp["info"] = "查询成功"

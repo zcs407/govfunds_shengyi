@@ -115,9 +115,9 @@ type ZFInfoClass struct {
 	Checkinfo   string `json:"checkinfo"`
 }
 type ZFAdminPrivacy struct {
-	Groupid int `json:"groupid"`
-	Siteid int `json:"siteid"`
-	Model string `json:"model"`
-	Classid int `json:"classid"`
-	Action string `json:"action"`
+	Groupid int    `json:"groupid"`
+	Siteid  int    `json:"siteid"`
+	Model   string `json:"model"`
+	Classid int    `json:"classid"`
+	Action  string `json:"action"`
 }

@@ -1,9 +1,10 @@
 package common
 
 import (
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"time"
 )
 
 var DBSQL *gorm.DB

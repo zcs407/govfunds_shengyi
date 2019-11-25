@@ -1,16 +1,17 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"govfunds_shengyi/src/common"
 	"log"
 	"reflect"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
-func Firstsave(ctx *gin.Context)  {
+func Firstsave(ctx *gin.Context) {
 	common.FirstSaveMysqlData2es()
-	ctx.JSON(200,"同步完成")
+	ctx.JSON(200, "同步完成")
 }
 func Search(ctx *gin.Context) {
 	resp := make(map[string]interface{})
@@ -34,6 +35,7 @@ func Search(ctx *gin.Context) {
 		Cy2        string `json:"cy_2"`
 		Page       string `json:"page"`
 		Size       string `json:"size"`
+		IsContent  bool   `json:"iscontent"`
 	}
 	var resArticlesInfo []resArticle
 	_ = ctx.BindJSON(&json)
@@ -60,7 +62,7 @@ func Search(ctx *gin.Context) {
 		return
 	}
 	log.Println(json)
-	res := common.SearchArticlePaging(keyword, cy2, pageInt, sizeInt, year, jb, prov, city, county, bw, cy)
+	res := common.SearchArticlePaging(keyword, cy2, pageInt, sizeInt, year, jb, prov, city, county, bw, cy, json.IsContent)
 	var typ common.ZfInfolist
 	for _, item := range res.Each(reflect.TypeOf(typ)) { //从搜索结果中取数据的方法
 		t := item.(common.ZfInfolist)
@@ -85,7 +87,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 	resp := make(map[string]interface{})
 	type resArticle struct {
 		Id        int    `json:"id"`
-		Classid int `json:"classid"`
+		Classid   int    `json:"classid"`
 		Checkinfo string `json:"checkinfo"`
 		Classname string `json:"classname"`
 		Title     string `json:"title"`
@@ -96,7 +98,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 	var json struct {
 		Year       string `json:"year"`
 		Jb         string `json:"jb"`
-		Value string	`json:"value"`
+		Value      string `json:"value"`
 		LiveProv   string `json:"live_prov"`
 		LiveCity   string `json:"live_city"`
 		LiveCounty string `json:"live_county"`
@@ -106,11 +108,12 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 		Page       string `json:"page"`
 		Size       string `json:"size"`
 		Classid    string `json:"classid"`
-		Checkinfo string `json:"checkinfo"`
+		Checkinfo  string `json:"checkinfo"`
+		IsContent  bool   `json:"iscontent"`
 	}
 	var resArticlesInfo []resArticle
 	_ = ctx.BindJSON(&json)
-	keyword:=json.Value
+	keyword := json.Value
 	year, _ := strconv.Atoi(json.Year)
 	jb, _ := strconv.Atoi(json.Jb)
 	prov, _ := strconv.Atoi(json.LiveProv)
@@ -124,7 +127,7 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 	size := json.Size
 	sizeInt, _ := strconv.Atoi(size)
 	classid, _ := strconv.Atoi(json.Classid)
-	checkinfo :=json.Checkinfo
+	checkinfo := json.Checkinfo
 	if len(page) == 0 || len(size) == 0 {
 		log.Println("没有获取到查询条件")
 		resp["code"] = "4004"
@@ -135,14 +138,14 @@ func SearchForColumnListInfo(ctx *gin.Context) {
 		return
 	}
 	log.Println(json)
-	res := common.SearchArticlePagingNoKeyword(keyword,cy2,checkinfo, pageInt, sizeInt, year, jb, prov, city, county, bw, cy, classid)
+	res := common.SearchColumnInfo(keyword, cy2, checkinfo, pageInt, sizeInt, year, jb, prov, city, county, bw, cy, classid, json.IsContent)
 	var typ common.ZfInfolist
 	for _, item := range res.Each(reflect.TypeOf(typ)) { //从搜索结果中取数据的方法
 		t := item.(common.ZfInfolist)
 		classname := common.GetClassNameByClassId(t.Classid)
 		article := resArticle{
 			Id:        t.Id,
-			Classid:t.Classid,
+			Classid:   t.Classid,
 			Checkinfo: t.Checkinfo,
 			Classname: classname,
 			Title:     t.Title,
